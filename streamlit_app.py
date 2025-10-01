@@ -252,18 +252,31 @@ def export_to_dataframe(parsed_tweets, username):
 
 def filter_tweets_by_keywords(df, keywords):
     """
-    Filter tweets by keywords, returning unique matches.
+    Filter tweets by keywords, returning unique matches with matched keywords.
     """
     if df.empty:
         return pd.DataFrame()
     
     mask = pd.Series([False] * len(df))
+    matched_keywords = pd.Series([[] for _ in range(len(df))])  # Initialize empty lists for each row
+    
     for kw in keywords:
         if 'available_tweet_text' in df.columns and df['available_tweet_text'].dtype == 'object':
-            mask |= df['available_tweet_text'].str.contains(kw, case=False, na=False)
-    filtered_df_total = df[mask]
-
-    # Remove duplicates
+            kw_mask = df['available_tweet_text'].str.contains(kw, case=False, na=False)
+            mask |= kw_mask
+            
+            # Add matched keyword to the list for rows that match
+            for idx in kw_mask[kw_mask].index:
+                matched_keywords[idx] = matched_keywords[idx] + [kw]
+    
+    filtered_df_total = df[mask].copy()  # Use copy to avoid SettingWithCopyWarning
+    
+    # Add matched_keyword column - join multiple keywords with comma
+    filtered_df_total.loc[:, 'matched_keyword'] = matched_keywords[mask].apply(
+        lambda kw_list: ', '.join(kw_list) if kw_list else 'No match'
+    )
+    
+    # Remove duplicates (keeping the first occurrence)
     filtered_df_total = filtered_df_total.drop_duplicates()
 
     return filtered_df_total
@@ -341,12 +354,49 @@ def main():
                 
                 st.success(f"✅ Found {len(df)} archived tweets")
 
-                # Filter by keywords - FIXED: Always define filtered_df
+                # Filter by keywords: Always define filtered_df
                 if keywords and not df.empty:
                     filtered_df = filter_tweets_by_keywords(df, keywords)
                     st.info(f"🔍 Found {len(filtered_df)} tweets matching your keywords")
                     st.dataframe(df.head(5))  # Show sample of original dataframe
-                    st.info("To download the full dataset, click on the download button at the top-right of the dataframe")
+                    
+                    # Download buttons for full dataset (not just filtered)
+                    st.subheader("💾 Download Full Dataset")
+                    col1, col2, col3 = st.columns(3)
+                    
+                    with col1:
+                        # CSV download for full dataset
+                        csv_full = df.to_csv(index=False)
+                        st.download_button(
+                            label="Download Full CSV",
+                            data=csv_full,
+                            file_name=f"{USERNAME}_FULL_tweets_{datetime.now().strftime('%Y%m%d%H%M%S')}.csv",
+                            mime="text/csv",
+                            help="Download the complete dataset (not filtered by keywords)"
+                        )
+                    
+                    with col2:
+                        # JSON download for full dataset
+                        json_full = df.to_json(orient='records', indent=2)
+                        st.download_button(
+                            label="Download Full JSON",
+                            data=json_full,
+                            file_name=f"{USERNAME}_FULL_tweets_{datetime.now().strftime('%Y%m%d%H%M%S')}.json",
+                            mime="application/json",
+                            help="Download the complete dataset (not filtered by keywords)"
+                        )
+                    
+                    with col3:
+                        # HTML download for full dataset
+                        html_full = df.to_html(index=False)
+                        st.download_button(
+                            label="Download Full HTML",
+                            data=html_full,
+                            file_name=f"{USERNAME}_FULL_tweets_{datetime.now().strftime('%Y%m%d%H%M%S')}.html",
+                            mime="text/html",
+                            help="Download the complete dataset (not filtered by keywords)"
+                        )
+                    
                 else:
                     filtered_df = df  # If no keywords, use full dataframe
                     st.info("ℹ️ Showing all tweets (no keyword filtering applied)")
@@ -539,7 +589,7 @@ def main():
                     st.dataframe(filtered_df, width='stretch')
                     
                     # Download buttons
-                    st.subheader("💾 Download Results")
+                    st.subheader("💾 Download Filtered Results")
                     
                     col1, col2, col3 = st.columns(3)
                     
