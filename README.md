@@ -1,6 +1,6 @@
 # **🐦 Twitter Archive Analyzer**
 
-A powerful Streamlit application for analyzing archived Twitter data using [WaybackTweets]('https://github.com/claromes/waybacktweets') and [Memory.lol]('https://github.com/travisbrown/memory.lol') APIs. This tool helps researchers explore historical Twitter activity with advanced filtering and analysis capabilities.
+A Streamlit application for analyzing archived Twitter data using [WaybackTweets]('https://github.com/claromes/waybacktweets') and [Memory.lol]('https://github.com/travisbrown/memory.lol') APIs. This tool helps researchers explore historical Twitter activity with advanced filtering and analysis capabilities.
 
 It is useful for investigating "anonymous" accounts to see if they have previously used a real identity, or for accounts that have deleted posts that are now unavailable on the X GUI. However, this only contains archived data and does not capture all posts or information for an account.
 
