@@ -493,22 +493,29 @@ def main():
                             if date_range_days <= 90:  # Less than 3 months - show daily
                                 st.write("**Daily Archived Posts**")
                                 time_series = df.set_index('archived_timestamp').resample('D').size()
-                                st.bar_chart(time_series)
+                                time_series_df = time_series.reset_index()
+                                time_series_df.columns = ['date', 'posts']
+                                time_series_df = time_series_df.set_index('date')
+                                st.bar_chart(time_series_df)
                                 st.caption(f"Showing archived activity for {date_range_days} days")
                                 
                             elif date_range_days <= 730:  # Less than 2 years - show monthly
                                 st.write("**Monthly Archived Posts**")
                                 time_series = df.set_index('archived_timestamp').resample('ME').size()
-                                # Format x-axis labels properly
-                                time_series.index = time_series.index.strftime('%Y-%m')
-                                st.bar_chart(time_series)
+                                time_series_df = time_series.reset_index()
+                                time_series_df.columns = ['date', 'posts']
+                                time_series_df['date'] = time_series_df['date'].dt.strftime('%Y-%m')
+                                time_series_df = time_series_df.set_index('date')
+                                st.bar_chart(time_series_df)
                                 st.caption(f"Showing monthly activity for {date_range_days//30} months")
                                 
                             else:  # More than 2 years - show yearly
                                 st.write("**Yearly Archived Posts**")
-                                time_series = df.set_index('archived_timestamp').resample('Y').size()
-                                time_series.index = time_series.index.strftime('%Y')
-                                st.bar_chart(time_series)
+                                time_series_df = time_series.reset_index()
+                                time_series_df.columns = ['date', 'posts']
+                                time_series_df['date'] = time_series_df['date'].dt.strftime('%Y')
+                                time_series_df = time_series_df.set_index('date')
+                                st.bar_chart(time_series_df)
                                 st.caption(f"Showing yearly activity for {date_range_days//365} years")
                     
                     with tab3:
