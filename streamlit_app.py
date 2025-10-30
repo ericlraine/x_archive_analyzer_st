@@ -450,7 +450,7 @@ def main():
                     tab1, tab2, tab3 = st.tabs(["📊 Statistics", "🕒 Timeline", "🔗 Content"])
                     
                     with tab1:
-                        col1, col2, col3, col4 = st.columns(4)
+                        col1, col2, col3 = st.columns(3)
                         
                         with col1:
                             if 'available_tweet_is_RT' in df.columns:
@@ -467,13 +467,13 @@ def main():
                                 avg_length = df['available_tweet_text'].str.len().mean()
                                 st.metric("Avg Length", f"{avg_length:.0f} chars")
                         
+                        # Additional stats in a second row
+                        col4, col5, col6 = st.columns(3)
+
                         with col4:
                             if 'available_tweet_text' in df.columns:
                                 hashtag_count = df['available_tweet_text'].str.count('#').sum()
-                                st.metric("Total Hashtags", hashtag_count)
-                        
-                        # Additional stats in a second row
-                        col5, col6 = st.columns(2)
+                                st.metric("Total Hashtags", hashtag_count)                        
                         
                         with col5:
                             if 'available_tweet_text' in df.columns:
