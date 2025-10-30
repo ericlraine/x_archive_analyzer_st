@@ -326,7 +326,7 @@ def main():
             return
         
         # Show loading spinner
-        with st.spinner("Analyzing Twitter archive..."):
+        with st.spinner("Analyzing Twitter archive...", show_time=True):
             # Step 1: Get Memory.lol account information
             st.subheader("1. 🔍 Memory.lol Account History")
             memorylol_data = display_memorylol_summary(USERNAME)
