@@ -8,6 +8,7 @@ from utils.utils import rotate_headers
 import re
 import hmac
 
+# ----- SECURITY -----
 # Password protection function
 def check_password():
     """Returns True if the user has the correct password."""
@@ -45,7 +46,8 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# Memory.lol API call
+# ----- COLLECTION -----
+# Step 1: Memory.lol API call
 def get_memorylol_account_info(username):
     """
     Get account information from Memory.lol API
@@ -71,6 +73,7 @@ def get_memorylol_account_info(username):
         st.error(f"❌ Error fetching Memory.lol data: {e}")
         return None
 
+# Display Memory.lol results
 def display_memorylol_summary(username):
     """
     Display formatted summary of Memory.lol account information
@@ -105,7 +108,7 @@ def display_memorylol_summary(username):
     
     return summary_data
 
-# Function to fetch and parse tweets using WaybackTweets
+# Step 2: Fetch and parse tweets using WaybackTweets
 def get_waybacktweets_archive(username, from_date=None, to_date=None, limit=None):
     """
     Get archived tweets using WaybackTweets
@@ -156,8 +159,7 @@ def get_waybacktweets_archive(username, from_date=None, to_date=None, limit=None
         parser = TweetsParser(archived_tweets, username, field_options)
         parsed_tweets = parser.parse()
         
-        # Create dataframe using WaybackTweets' method
-        # Try different approaches to get the dataframe
+        # Create dataframe using WaybackTweets method
         df = None
         
         # Approach 1: Use TweetsExporter to create dataframe
@@ -194,6 +196,7 @@ def get_waybacktweets_archive(username, from_date=None, to_date=None, limit=None
         st.error(f"❌ Error fetching WaybackTweets data: {e}")
         return None, None
 
+# Parse Wayback Tweets results to dataframe
 def export_to_dataframe(parsed_tweets, username):
     """
     Convert parsed tweets to pandas DataFrame using WaybackTweets' methods
@@ -250,6 +253,7 @@ def export_to_dataframe(parsed_tweets, username):
         except:
             return pd.DataFrame()
 
+# Filter dataframe for posts that contain keyword(s)
 def filter_tweets_by_keywords(df, keywords):
     """
     Filter tweets by keywords, returning unique matches with matched keywords.
@@ -401,7 +405,7 @@ def main():
                     filtered_df = df  # If no keywords, use full dataframe
                     st.info("ℹ️ Showing all tweets (no keyword filtering applied)")
                 
-                # Dashboard - MOVED AFTER filtered_df is defined
+                # Analysis Dashboard
                 st.subheader("📊 Analysis Dashboard")
                 
                 col1, col2, col3 = st.columns([2, 1, 1])
@@ -438,7 +442,7 @@ def main():
                     else:
                         st.metric("Keyword Matches", "N/A")
                 
-                # === ENHANCED ANALYSIS SECTION ===
+                # Enhanced Analysis Section
                 st.subheader("🔍 Enhanced Analysis")
 
                 if not df.empty:
@@ -456,7 +460,7 @@ def main():
                         with col2:
                             if 'archived_timestamp' in df.columns:
                                 days_span = (df['archived_timestamp'].max() - df['archived_timestamp'].min()).days
-                                st.metric("Activity Span", f"{days_span} days")
+                                st.metric("Archived Activity Span", f"{days_span} days")
                         
                         with col3:
                             if 'available_tweet_text' in df.columns:
@@ -469,7 +473,7 @@ def main():
                                 st.metric("Total Hashtags", hashtag_count)
                         
                         # Additional stats in a second row
-                        col5, col6, col7, col8 = st.columns(4)
+                        col5, col6 = st.columns(2)
                         
                         with col5:
                             if 'available_tweet_text' in df.columns:
@@ -481,32 +485,19 @@ def main():
                                 url_count = df['available_tweet_text'].str.count('http').sum()
                                 st.metric("Links Shared", url_count)
                         
-                        with col7:
-                            if 'archived_timestamp' in df.columns:
-                                tweets_per_day = len(df) / max(1, days_span)
-                                st.metric("Avg Tweets/Day", f"{tweets_per_day:.1f}")
-                        
-                        with col8:
-                            if 'archived_timestamp' in df.columns:
-                                most_active_hour = df['archived_timestamp'].dt.hour.mode()
-                                if not most_active_hour.empty:
-                                    st.metric("Peak Hour", f"{most_active_hour.iloc[0]}:00")
-                                else:
-                                    st.metric("Peak Hour", "N/A")
-                    
                     with tab2:
                         if 'archived_timestamp' in df.columns:
                             # Smart time grouping based on date range
                             date_range_days = (df['archived_timestamp'].max() - df['archived_timestamp'].min()).days
                             
                             if date_range_days <= 90:  # Less than 3 months - show daily
-                                st.write("**Daily Activity**")
+                                st.write("**Daily Archived Posts**")
                                 time_series = df.set_index('archived_timestamp').resample('D').size()
                                 st.bar_chart(time_series)
-                                st.caption(f"Showing daily activity for {date_range_days} days")
+                                st.caption(f"Showing archived activity for {date_range_days} days")
                                 
                             elif date_range_days <= 730:  # Less than 2 years - show monthly
-                                st.write("**Monthly Activity**")
+                                st.write("**Monthly Archived Posts**")
                                 time_series = df.set_index('archived_timestamp').resample('ME').size()
                                 # Format x-axis labels properly
                                 time_series.index = time_series.index.strftime('%Y-%m')
@@ -514,7 +505,7 @@ def main():
                                 st.caption(f"Showing monthly activity for {date_range_days//30} months")
                                 
                             else:  # More than 2 years - show yearly
-                                st.write("**Yearly Activity**")
+                                st.write("**Yearly Archived Posts**")
                                 time_series = df.set_index('archived_timestamp').resample('Y').size()
                                 time_series.index = time_series.index.strftime('%Y')
                                 st.bar_chart(time_series)
