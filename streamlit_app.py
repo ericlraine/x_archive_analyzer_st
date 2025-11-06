@@ -511,6 +511,7 @@ def main():
                                 
                             else:  # More than 2 years - show yearly
                                 st.write("**Yearly Archived Posts**")
+                                time_series = df.set_index('archived_timestamp').resample('YE').size()
                                 time_series_df = time_series.reset_index()
                                 time_series_df.columns = ['date', 'posts']
                                 time_series_df['date'] = time_series_df['date'].dt.strftime('%Y')
